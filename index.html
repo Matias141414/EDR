@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PIA Dashboard - Proyecto Pie Andino</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #fafafa;
+            padding: 2rem;
+            min-height: 100vh;
+        }
+        
+        .container { max-width: 1400px; margin: 0 auto; }
+        
+        .header {
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 2rem;
+        }
+        
+        .header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 0.5rem;
+        }
+        
+        .sync-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            background: #ecfdf5;
+            border-radius: 16px;
+            font-size: 12px;
+            color: #065f46;
+            margin-top: 1rem;
+            font-weight: 500;
+        }
+        
+        .sync-dot {
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+        }
+        
+        .section {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 2rem;
+        }
+        
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f3f4f6;
+        }
+        
+        .section-icon {
+            font-size: 28px;
+        }
+        
+        .section-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a1a1a;
+        }
+        
+        .section-subtitle {
+            font-size: 14px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+        
+        /* ESTADO ACTUAL */
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+        
+        .status-card {
+            padding: 1.5rem;
+            background: #f9fafb;
+            border-radius: 12px;
+            border-left: 4px solid #e5e7eb;
+        }
+        
+        .status-card.primary {
+            border-left-color: #3b82f6;
+            background: linear-gradient(to right, #eff6ff 0%, #f9fafb 100%);
+        }
+        
+        .status-card.success {
+            border-left-color: #10b981;
+            background: linear-gradient(to right, #ecfdf5 0%, #f9fafb 100%);
+        }
+        
+        .status-card.warning {
+            border-left-color: #f59e0b;
+            background: linear-gradient(to right, #fffbeb 0%, #f9fafb 100%);
+        }
+        
+        .status-label {
+            font-size: 12px;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        
+        .status-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 4px;
+        }
+        
+        .status-subtitle {
+            font-size: 13px;
+            color: #6b7280;
+        }
+        
+        .progress-bar-container {
+            margin-top: 1.5rem;
+        }
+        
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        
+        .progress-label {
+            font-size: 13px;
+            color: #374151;
+            font-weight: 600;
+        }
+        
+        .progress-percentage {
+            font-size: 13px;
+            color: #3b82f6;
+            font-weight: 700;
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%);
+            transition: width 0.3s;
+        }
+        
+        /* ALERTAS Y RIESGOS */
+        .alert-item {
+            padding: 1.25rem;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            border-left: 4px solid;
+            transition: transform 0.2s;
+        }
+        
+        .alert-item:hover {
+            transform: translateX(4px);
+        }
+        
+        .alert-item.critical {
+            background: linear-gradient(to right, #fef2f2 0%, white 100%);
+            border-left-color: #ef4444;
+        }
+        
+        .alert-item.high {
+            background: linear-gradient(to right, #fff7ed 0%, white 100%);
+            border-left-color: #f59e0b;
+        }
+        
+        .alert-item.medium {
+            background: linear-gradient(to right, #fef9c3 0%, white 100%);
+            border-left-color: #eab308;
+        }
+        
+        .alert-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .alert-title {
+            font-weight: 600;
+            font-size: 15px;
+            color: #1a1a1a;
+        }
+        
+        .alert-badge {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .alert-badge.critical {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+        
+        .alert-badge.high {
+            background: #fed7aa;
+            color: #c2410c;
+        }
+        
+        .alert-badge.medium {
+            background: #fef3c7;
+            color: #a16207;
+        }
+        
+        .alert-info {
+            font-size: 13px;
+            color: #4b5563;
+            margin-bottom: 8px;
+            line-height: 1.6;
+        }
+        
+        .alert-dates {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 8px;
+        }
+        
+        .alert-link {
+            font-size: 12px;
+            color: #3b82f6;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-weight: 500;
+        }
+        
+        /* PRÓXIMOS PASOS */
+        .timeline {
+            position: relative;
+            padding-left: 40px;
+        }
+        
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 12px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #e5e7eb;
+        }
+        
+        .timeline-item {
+            position: relative;
+            padding-bottom: 2rem;
+        }
+        
+        .timeline-item:last-child {
+            padding-bottom: 0;
+        }
+        
+        .timeline-dot {
+            position: absolute;
+            left: -34px;
+            top: 4px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 0 0 2px #e5e7eb;
+        }
+        
+        .timeline-dot.completed {
+            background: #10b981;
+            box-shadow: 0 0 0 2px #10b981;
+        }
+        
+        .timeline-dot.current {
+            background: #3b82f6;
+            box-shadow: 0 0 0 2px #3b82f6;
+        }
+        
+        .timeline-dot.upcoming {
+            background: #e5e7eb;
+        }
+        
+        .timeline-content {
+            padding: 1rem 1.25rem;
+            background: #f9fafb;
+            border-radius: 10px;
+        }
+        
+        .timeline-date {
+            font-size: 12px;
+            color: #3b82f6;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+        
+        .timeline-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 6px;
+        }
+        
+        .timeline-description {
+            font-size: 13px;
+            color: #6b7280;
+            line-height: 1.6;
+        }
+        
+        .action-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 16px;
+            margin-top: 1.5rem;
+        }
+        
+        .action-card {
+            padding: 1.25rem;
+            background: #f9fafb;
+            border-radius: 12px;
+            border-left: 4px solid #3b82f6;
+        }
+        
+        .action-owner {
+            font-size: 12px;
+            color: #3b82f6;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .action-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 6px;
+        }
+        
+        .action-description {
+            font-size: 13px;
+            color: #6b7280;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState } = React;
+
+        // DATOS REALES DE WRIKE
+        const PROJECT_DATA = {
+            name: "PIA - Pie Andino",
+            updated: "15 Abril 2026",
+            
+            // ESTADO ACTUAL
+            status: {
+                totalTasks: 78,
+                completed: 3,
+                active: 75,
+                progress: 3.8,
+                currentPhase: "Desarrollo",
+                phaseProgress: 45
+            },
+            
+            // ALERTAS Y RIESGOS
+            criticalTasks: [
+                {
+                    id: 1,
+                    title: "AGUAS LLUVIAS (SERVIU)",
+                    priority: "critical",
+                    start: "17 feb 2026",
+                    end: "2 sep 2026",
+                    days: 142,
+                    description: "Proceso de aprobación más extenso del cronograma. Requiere coordinación continua con SERVIU.",
+                    risk: "Cualquier retraso impacta directamente la fecha de Permiso de Edificación.",
+                    permalink: "https://www.wrike.com/open.htm?id=4391414744"
+                },
+                {
+                    id: 2,
+                    title: "SERVIDUMBRES",
+                    priority: "high",
+                    start: "16 mar 2026",
+                    end: "17 abr 2026",
+                    days: 25,
+                    description: "Plazo ajustado para negociación y aprobación de servidumbres con propietarios vecinos.",
+                    risk: "Ingreso previsto 10 abril. Seguimiento semanal necesario.",
+                    permalink: "https://www.wrike.com/open.htm?id=4391414324"
+                },
+                {
+                    id: 3,
+                    title: "Arq. PE (DOM)",
+                    priority: "high",
+                    start: "7 abr 2026",
+                    end: "11 may 2026",
+                    days: 25,
+                    description: "Arquitectura de Permiso de Edificación. Responsables: Cristian Merino, Agustín Infante.",
+                    risk: "Depende de recibir acta AP (22 abril). Inicio podría adelantarse si acta llega antes.",
+                    permalink: "https://www.wrike.com/open.htm?id=4387160953"
+                },
+                {
+                    id: 4,
+                    title: "Estudio IMIV Básico",
+                    priority: "medium",
+                    start: "13 abr 2026",
+                    end: "22 may 2026",
+                    days: 30,
+                    description: "iTransporte confirmó inicio del estudio (actualización 10 abril). En desarrollo activo.",
+                    risk: "Última tarea crítica antes del IF Rev. Arquitecto.",
+                    permalink: "https://www.wrike.com/open.htm?id=4391497910"
+                }
+            ],
+            
+            // PRÓXIMOS PASOS
+            upcomingMilestones: [
+                {
+                    date: "7 abr 2026",
+                    title: "Ingreso EXP AP",
+                    description: "Expediente Anteproyecto ingresado exitosamente a DOM.",
+                    status: "completed"
+                },
+                {
+                    date: "10 abr 2026",
+                    title: "Ingreso Solicitud Servidumbres",
+                    description: "Documentación de servidumbres lista para ingreso. Responsable: Gianluca Papa.",
+                    status: "current"
+                },
+                {
+                    date: "22 abr 2026",
+                    title: "Acta obs. Anteproyecto",
+                    description: "Fecha esperada para recepción de observaciones de DOM. Proceso típico 15-30 días.",
+                    status: "upcoming"
+                },
+                {
+                    date: "13 abr 2026",
+                    title: "Inicio Estudio IMIV",
+                    description: "iTransporte inicia desarrollo del estudio. Duración: 30 días.",
+                    status: "upcoming"
+                },
+                {
+                    date: "1 jun 2026",
+                    title: "Ingreso EXP PE",
+                    description: "Ingreso del expediente de Permiso de Edificación. Hito crítico del proyecto.",
+                    status: "upcoming"
+                },
+                {
+                    date: "1 sep 2026",
+                    title: "Permiso de Edificación",
+                    description: "Fecha objetivo para obtención del Permiso de Edificación.",
+                    status: "upcoming"
+                }
+            ],
+            
+            // ACCIONES REQUERIDAS
+            actionItems: [
+                {
+                    owner: "Nelson Soto / Gianluca Papa",
+                    title: "Confirmar ingreso servidumbres SERVIU",
+                    description: "Verificar recepción de documentación en SERVIU. Solicitar número de expediente."
+                },
+                {
+                    owner: "Matías Maruri",
+                    title: "Check-in con iTransporte (IMIV)",
+                    description: "Confirmar avance del estudio IMIV. Verificar que tienen todos los antecedentes necesarios."
+                },
+                {
+                    owner: "Cristian / Agustín",
+                    title: "Preparar arquitectura PE",
+                    description: "Comenzar revisión de arquitectura para PE. Adelantar trabajo si acta AP llega antes del 22 abril."
+                },
+                {
+                    owner: "Equipo DOM",
+                    title: "Monitorear acta Anteproyecto",
+                    description: "Llamar a DOM a partir del 18 abril para consultar estado de revisión."
+                }
+            ]
+        };
+
+        function PIADashboard() {
+            const data = PROJECT_DATA;
+            
+            return (
+                <div className="container">
+                    {/* Header */}
+                    <div className="header">
+                        <h1>🏗️ {data.name}</h1>
+                        <p style={{color: '#6b7280', fontSize: '14px'}}>Dashboard Estratégico de Proyecto</p>
+                        <div className="sync-badge">
+                            <div className="sync-dot"></div>
+                            <span>Datos reales desde Wrike • Actualizado: {data.updated}</span>
+                        </div>
+                    </div>
+
+                    {/* 1. ESTADO ACTUAL */}
+                    <div className="section">
+                        <div className="section-header">
+                            <div className="section-icon">📊</div>
+                            <div>
+                                <div className="section-title">Estado Actual</div>
+                                <div className="section-subtitle">¿Dónde estamos ahora?</div>
+                            </div>
+                        </div>
+                        
+                        <div className="status-grid">
+                            <div className="status-card primary">
+                                <div className="status-label">Fase Actual</div>
+                                <div className="status-value" style={{fontSize: '20px'}}>{data.status.currentPhase}</div>
+                                <div className="status-subtitle">Dic 2025 - Sep 2026</div>
+                            </div>
+                            
+                            <div className="status-card">
+                                <div className="status-label">Total Tareas</div>
+                                <div className="status-value">{data.status.totalTasks}</div>
+                                <div className="status-subtitle">{data.status.active} activas</div>
+                            </div>
+                            
+                            <div className="status-card success">
+                                <div className="status-label">Completadas</div>
+                                <div className="status-value">{data.status.completed}</div>
+                                <div className="status-subtitle">{data.status.progress}% progreso</div>
+                            </div>
+                            
+                            <div className="status-card warning">
+                                <div className="status-label">En Ruta Crítica</div>
+                                <div className="status-value">{data.criticalTasks.length}</div>
+                                <div className="status-subtitle">Requieren monitoreo</div>
+                            </div>
+                        </div>
+                        
+                        <div className="progress-bar-container">
+                            <div className="progress-header">
+                                <span className="progress-label">Progreso Fase Desarrollo</span>
+                                <span className="progress-percentage">{data.status.phaseProgress}%</span>
+                            </div>
+                            <div className="progress-bar">
+                                <div className="progress-fill" style={{width: `${data.status.phaseProgress}%`}}></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* 2. ALERTAS Y RIESGOS */}
+                    <div className="section">
+                        <div className="section-header">
+                            <div className="section-icon">🚨</div>
+                            <div>
+                                <div className="section-title">Alertas y Riesgos</div>
+                                <div className="section-subtitle">¿Qué requiere atención inmediata?</div>
+                            </div>
+                        </div>
+                        
+                        {data.criticalTasks.map(task => (
+                            <div key={task.id} className={`alert-item ${task.priority}`}>
+                                <div className="alert-header">
+                                    <span className="alert-title">{task.title}</span>
+                                    <span className={`alert-badge ${task.priority}`}>{task.priority}</span>
+                                </div>
+                                <div className="alert-dates">
+                                    📅 {task.start} → {task.end} ({task.days} días)
+                                </div>
+                                <div className="alert-info">
+                                    <strong>Descripción:</strong> {task.description}
+                                </div>
+                                <div className="alert-info">
+                                    <strong>Riesgo:</strong> {task.risk}
+                                </div>
+                                <a href={task.permalink} target="_blank" className="alert-link">
+                                    Ver en Wrike →
+                                </a>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* 3. PRÓXIMOS PASOS */}
+                    <div className="section">
+                        <div className="section-header">
+                            <div className="section-icon">🎯</div>
+                            <div>
+                                <div className="section-title">Próximos Pasos</div>
+                                <div className="section-subtitle">¿Qué sigue en el cronograma?</div>
+                            </div>
+                        </div>
+                        
+                        <div className="timeline">
+                            {data.upcomingMilestones.map((milestone, idx) => (
+                                <div key={idx} className="timeline-item">
+                                    <div className={`timeline-dot ${milestone.status}`}></div>
+                                    <div className="timeline-content">
+                                        <div className="timeline-date">{milestone.date}</div>
+                                        <div className="timeline-title">{milestone.title}</div>
+                                        <div className="timeline-description">{milestone.description}</div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                        
+                        <div style={{marginTop: '2rem', paddingTop: '2rem', borderTop: '2px solid #f3f4f6'}}>
+                            <h3 style={{fontSize: '18px', fontWeight: '600', marginBottom: '1rem', color: '#1a1a1a'}}>
+                                ✅ Acciones Requeridas Esta Semana
+                            </h3>
+                            <div className="action-grid">
+                                {data.actionItems.map((action, idx) => (
+                                    <div key={idx} className="action-card">
+                                        <div className="action-owner">👤 {action.owner}</div>
+                                        <div className="action-title">{action.title}</div>
+                                        <div className="action-description">{action.description}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        ReactDOM.render(<PIADashboard />, document.getElementById('root'));
+    </script>
+</body>
+</html>
